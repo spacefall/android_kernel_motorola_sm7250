@@ -1,0 +1,62 @@
+name: Build Android Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc \
+            bison \
+            build-essential \
+            ccache \
+            curl \
+            dwarves \
+            flex \
+            gawk \
+            git \
+            libelf-dev \
+            libssl-dev \
+            lz4 \
+            rsync \
+            unzip \
+            xz-utils \
+            zip \
+            zstd
+
+      - name: Get clang_r530567 for kernel build
+        run: |
+          set -euo pipefail
+
+          curl -fL https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz -o /tmp/clang-prebuilt.tar.gz
+          mkdir -p clang_r530567
+          tar xzf /tmp/clang-prebuilt.tar.gz -C clang_r530567
+
+          test -x "clang_r530567/bin/clang"
+
+      - name: Build kernel
+        run: |
+          set -euo pipefail
+          chmod +x ./build.sh
+          ./build.sh
+
+      - name: Upload kernel artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-artifacts
+          if-no-files-found: warn
+          path: |
+            AnyKernel/*.zip
