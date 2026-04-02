@@ -1,7 +1,4 @@
 #!/bin/bash
-
-set -e
-
 DEVICE="nairo"
 OUT="out"
 AK3_REPO="https://github.com/osm0sis/AnyKernel3.git"
@@ -35,25 +32,23 @@ build_kernel() {
 
     echo "🔧 Starting build for: $DEVICE"
 
-    make O="$OUT" "$CONFIGS" LLVM=1
+    make O="$OUT" LLVM=1 $CONFIGS
 
     local build_start
     build_start=$(date +%s)
-    make O="$OUT" -j"$(nproc)" LLVM=1
+    make -j"$(nproc)" O="$OUT" LLVM=1
     local build_end
     build_end=$(date +%s)
     local duration=$((build_end - build_start))
 
     if [ ! -f "$image_path" ]; then
         echo "❌ Build failed after $(printf "%02d:%02d" $((duration / 60)) $((duration % 60)))"
-        return 1
+        exit 1
     fi
     echo "✅ Build completed in $(printf "%02d:%02d" $((duration / 60)) $((duration % 60)))"
 
     echo "📦 Packaging..."
     cp "$image_path" "AnyKernel/Image"
-
-    pushd "AnyKernel" >/dev/null
 
     local zip_name="Anykernel3-${DEVICE}.zip"
     zip -r9 "$zip_name" * -x .git\* README.md\*
@@ -64,8 +59,6 @@ build_kernel() {
     else
         echo "❌ Failed to create AnyKernel zip for $DEVICE."
     fi
-
-    popd >/dev/null
 }
 
 if [[ "$1" == "--clean" ]]; then
@@ -85,7 +78,7 @@ fi
 
 if [ ! -d "AnyKernel" ]; then
     echo "📦 AnyKernel not found. Cloning from repository..."
-    git clone "$AK3_REPO" "AnyKernel"
+    git clone "$AK3_REPO" "AnyKernel" --depth=1
     rm -fr "AnyKernel/.git" "AnyKernel/.github" "AnyKernel/README.md" "AnyKernel/ramdisk" "AnyKernel/patch"
 
     NEW_BLOCK="properties() { '
