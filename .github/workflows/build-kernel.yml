@@ -1,6 +1,7 @@
 name: Build Android Kernel
 
 on:
+  push: 
   workflow_dispatch:
 
 jobs:
@@ -53,8 +54,7 @@ jobs:
           ./build.sh
 
       - name: Upload kernel artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: kernel-artifacts
           if-no-files-found: warn
