@@ -37,15 +37,19 @@ jobs:
             zip \
             zstd
 
-      - name: Get clang_r530567 for kernel build
+      - name: Cache toolchain
+        id: toolchain-cache
+        uses: actions/cache@v5
+        with:
+          path: $HOME/toolchains/neutron-clang
+          key: ${{ runner.os }}-primes
+
+      - name: Get toolchain
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
         run: |
-          set -euo pipefail
-
-          curl -fL https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz -o /tmp/clang-prebuilt.tar.gz
-          mkdir -p clang_r530567
-          tar xzf /tmp/clang-prebuilt.tar.gz -C clang_r530567
-
-          test -x "clang_r530567/bin/clang"
+          mkdir -p "$HOME/toolchains/neutron-clang"
+          cd "$HOME/toolchains/neutron-clang"
+          bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") -S
 
       - name: Build kernel
         run: |

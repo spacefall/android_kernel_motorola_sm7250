@@ -4,7 +4,6 @@
 DEVICE="nairo"
 OUT="out"
 AK3_REPO="https://github.com/spacefall/AnyKernel3.git"
-TOOLCHAIN_DIR="$(pwd)/clang_r530567"
 CONFIGS=(
     "vendor/nairo_defconfig"
     "vendor/debugfs.config"
@@ -18,13 +17,12 @@ CONFIGS=(
 ADDITIONAL_BUILD_FLAGS=(
     "DTC_FLAGS=-f"
     "LLVM_IAS=1"
-    "CLANG_TRIPLE=aarch64-linux-gnu-"
     "CROSS_COMPILE=aarch64-linux-android-"
     "CROSS_COMPILE_COMPAT=arm-linux-androidkernel-"
     "Image.gz-dtb"
 )
 
-export PATH="$TOOLCHAIN_DIR/bin:$PATH"
+export PATH="$HOME/toolchains/neutron-clang/bin:$PATH"
 export ARCH=arm64
 
 if command -v ccache &>/dev/null; then
