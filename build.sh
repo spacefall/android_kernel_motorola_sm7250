@@ -13,6 +13,7 @@ CONFIGS=(
     "docker.config"
     "additional.config"
     "droidspaces-additional.config"
+    "lto.config"
 )
 ADDITIONAL_BUILD_FLAGS=(
     "DTC_FLAGS=-f"
