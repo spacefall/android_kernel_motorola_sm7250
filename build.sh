@@ -1,9 +1,27 @@
 #!/bin/bash
+# Loosely based on https://github.com/LeDrew2017/FreeRunnerKernel/blob/7a99c2fe668a064942d124d805e79034674757a6/build.sh
+
 DEVICE="nairo"
 OUT="out"
-AK3_REPO="https://github.com/osm0sis/AnyKernel3.git"
+AK3_REPO="https://github.com/spacefall/AnyKernel3.git"
 TOOLCHAIN_DIR="$(pwd)/clang_r530567"
-CONFIGS="vendor/nairo_defconfig vendor/debugfs.config kernelsu.config droidspaces.config docker.config additional.config droidspaces-additional.config"
+CONFIGS=(
+    "vendor/nairo_defconfig"
+    "vendor/debugfs.config"
+    "kernelsu.config"
+    "droidspaces.config"
+    "docker.config"
+    "additional.config"
+    "droidspaces-additional.config"
+)
+ADDITIONAL_BUILD_FLAGS=(
+    "DTC_FLAGS=-f"
+    "LLVM_IAS=1"
+    "CLANG_TRIPLE=aarch64-linux-gnu-"
+    "CROSS_COMPILE=aarch64-linux-android-"
+    "CROSS_COMPILE_COMPAT=arm-linux-androidkernel-"
+    "Image.gz-dtb"
+)
 
 export PATH="$TOOLCHAIN_DIR/bin:$PATH"
 export ARCH=arm64
@@ -19,11 +37,12 @@ fi
 
 perform_clean() {
     echo "🧹 Cleaning up..."
-    rm -f "AnyKernel/Image"
     if [ "$1" = true ]; then
-        rm -fr "AnyKernel"
+        rm -fr "AnyKernel" "$OUT"
+    else
+        rm -f "AnyKernel/Image" "AnyKernel/*.zip"
+        make O="$OUT" LLVM=1 mrproper
     fi
-    make O="$OUT" LLVM=1 mrproper
     echo "✅ Clean complete."
 }
 
@@ -32,11 +51,11 @@ build_kernel() {
 
     echo "🔧 Starting build for: $DEVICE"
 
-    make O="$OUT" LLVM=1 $CONFIGS
+    make O="$OUT" LLVM=1 "${CONFIGS[@]}"
 
     local build_start
     build_start=$(date +%s)
-    make -j"$(nproc)" O="$OUT" LLVM=1
+    make O="$OUT" LLVM=1 -j"$(nproc)" "${ADDITIONAL_BUILD_FLAGS[@]}"
     local build_end
     build_end=$(date +%s)
     local duration=$((build_end - build_start))
@@ -51,7 +70,11 @@ build_kernel() {
     cp "$image_path" "AnyKernel/Image"
 
     local zip_name="Anykernel3-${DEVICE}.zip"
-    zip -r9 "$zip_name" * -x .git\* README.md\*
+    cd AnyKernel || (
+        echo "❌ Failed to create AnyKernel zip for $DEVICE."
+        exit 1
+    )
+    zip -r9 "$zip_name" * -x ".git/"
 
     if [ -f "$zip_name" ]; then
         echo "✅ Packaged $zip_name successfully."
@@ -78,35 +101,7 @@ fi
 
 if [ ! -d "AnyKernel" ]; then
     echo "📦 AnyKernel not found. Cloning from repository..."
-    git clone "$AK3_REPO" "AnyKernel" --depth=1
-    rm -fr "AnyKernel/.git" "AnyKernel/.github" "AnyKernel/README.md" "AnyKernel/ramdisk" "AnyKernel/patch"
-
-    NEW_BLOCK="properties() { '
-kernel.string='Kernel for $DEVICE'
-do.devicecheck=1
-do.modules=0
-do.systemless=0
-do.cleanup=1
-do.cleanuponabort=1
-device.name1=${DEVICE}
-supported.versions=
-supported.patchlevels=
-supported.vendorpatchlevels=
-'; } # end properties"
-
-    # Use awk to replace only the properties() block (from its opening line to
-    # the closing ''; } # end properties' line), leaving everything else intact.
-    awk -v new_block="$NEW_BLOCK" '
-  /^properties\(\) \{ '"'"'$/ { in_block=1 }
-  in_block {
-    if (/^'"'"'; \} # end properties$/) {
-      print new_block
-      in_block=0
-    }
-    next
-  }
-  { print }
-' "AnyKernel/anykernel.sh" >"AnyKernel/anykernel.tmp" && mv "AnyKernel/anykernel.tmp" "AnyKernel/anykernel.sh"
+    git clone "$AK3_REPO" "AnyKernel" --depth=1 --branch=$DEVICE
 fi
 
 perform_clean
