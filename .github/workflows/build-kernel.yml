@@ -4,6 +4,9 @@ on:
   push: 
   workflow_dispatch:
 
+env:
+  AOSP_CLANG: clang-r530567
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,19 +44,17 @@ jobs:
         id: toolchain-cache
         uses: actions/cache@v5
         with:
-          path: $HOME/toolchain
-          key: toolchain-cache
+          path: ~/toolchain
+          key: toolchain-cache-${{ env.AOSP_CLANG }}
 
       - name: Get toolchain
         if: steps.toolchain-cache.outputs.cache-hit != 'true'
-        env:
-          RELEASE: clang-r584948
         run: |
-          mkdir -p "$HOME/toolchain"
-          cd "$HOME/toolchain"
-          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/$RELEASE.tar.gz
-          tar xvf $RELEASE.tar.gz
-          rm $RELEASE.tar.gz
+          mkdir -p ~/toolchain
+          cd ~/toolchain
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/$AOSP_CLANG.tar.gz
+          tar xvf $AOSP_CLANG.tar.gz
+          rm $AOSP_CLANG.tar.gz
 
       - name: Build kernel
         run: |
