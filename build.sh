@@ -17,12 +17,13 @@ CONFIGS=(
 ADDITIONAL_BUILD_FLAGS=(
     "DTC_FLAGS=-f"
     "LLVM_IAS=1"
+    "CLANG_TRIPLE=aarch64-linux-gnu-"
     "CROSS_COMPILE=aarch64-linux-android-"
     "CROSS_COMPILE_COMPAT=arm-linux-androidkernel-"
     "Image.gz-dtb"
 )
 
-export PATH="$HOME/toolchains/neutron-clang/bin:$PATH"
+export PATH="$HOME/toolchain/bin:$PATH"
 export ARCH=arm64
 
 if command -v ccache &>/dev/null; then
