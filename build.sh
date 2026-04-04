@@ -89,6 +89,11 @@ if [[ "$1" == "--clean" ]]; then
     exit 0
 fi
 
+if [[ "$1" == "--config" ]]; then
+    make O="$OUT" LLVM=1 "${CONFIGS[@]}"
+    exit 0
+fi
+
 if [[ "$1" == "--menuconfig" ]]; then
     make O="$OUT" LLVM=1 menuconfig
     exit 0
