@@ -6,6 +6,8 @@ on:
 
 env:
   AOSP_CLANG: clang-r530567
+  # could be main, master or mirror-goog-main-llvm-toolchain-source
+  AOSP_BRANCH: main
 
 jobs:
   build:
@@ -52,7 +54,7 @@ jobs:
         run: |
           mkdir -p ~/toolchain
           cd ~/toolchain
-          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/$AOSP_CLANG.tar.gz
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/$AOSP_BRANCH/$AOSP_CLANG.tar.gz  
           tar xvf $AOSP_CLANG.tar.gz
           rm $AOSP_CLANG.tar.gz
 
